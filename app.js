@@ -4,8 +4,10 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { connectDB } = require('./config/database');
 
 const indexRouter = require('./src/routes/index-route');
+const contentRouter = require('./src/routes/content-route');
 const errorHandler = require('./src/middlewares/error-handler');
 
 dotenv.config();
@@ -61,7 +63,11 @@ app.use(
 
 app.use('/api', indexRouter);
 
+app.use('/api/contents', contentRouter);
+
 app.use(errorHandler);
+
+connectDB();
 
 // 서버 시작
 app.listen(app.get('port'), () => {
