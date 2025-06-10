@@ -8,7 +8,11 @@ const { connectDB } = require('./config/database');
 
 const indexRouter = require('./src/routes/index-route');
 const contentRouter = require('./src/routes/content-route');
+const uploadRouter = require('./src/routes/upload-route');
 const errorHandler = require('./src/middlewares/error-handler');
+
+// const mongoose = require('mongoose');
+// const RefAudio = require('./src/models/RefAudio'); // 모델 경로에 맞게 조정
 
 dotenv.config();
 
@@ -65,9 +69,30 @@ app.use('/api', indexRouter);
 
 app.use('/api/contents', contentRouter);
 
+app.use('/api/upload', uploadRouter);
+
 app.use(errorHandler);
 
 connectDB();
+
+// async function addTestRefAudio() {
+//   await mongoose.connect(process.env.MONGO_URI, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   });
+
+//   // 테스트 데이터
+//   const testRefAudio = new RefAudio({
+//     globalOrder: 9,
+//     audio_path: '/data/audio/summer.wav',
+//   });
+
+//   await testRefAudio.save();
+//   console.log('테스트 데이터 저장 완료!');
+//   mongoose.disconnect();
+// }
+
+// addTestRefAudio();
 
 // 서버 시작
 app.listen(app.get('port'), () => {

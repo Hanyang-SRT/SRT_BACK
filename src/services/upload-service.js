@@ -1,13 +1,33 @@
 const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
 
-exports.processAudio = async (file) => {
+exports.processAudio = async (userFile, refFilePath) => {
   try {
-    const data = axios.post('http://<IP>:<PORT>', file.buffer, {
-      headers: {
-        'Content-Type': file.mimetype,
-        'Content-Length': file.size,
-      },
-      timeout: 10000,
+    const form = new FormData();
+
+    form.append('user_audio', userFile.buffer, {
+      filename: userFile.originalname,
+      contentType: userFile.mimetype,
     });
-  } catch (err) {}
+
+    // ref_audio (서버 파일 경로에서 ReadStream으로)
+    form.append('ref_audio', fs.createReadStream(refFilePath));
+
+    const response = await axios.post(
+      'https://areum817-speech-recognition.hf.space/analyze', // API 엔드포인트
+      form,
+      {
+        headers: form.getHeaders(),
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: 60000,
+      }
+    );
+
+    return response.data;
+  } catch (err) {
+    console.error(err);
+    throw new Error('모델 서버 연동 실패');
+  }
 };
