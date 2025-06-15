@@ -21,7 +21,7 @@ exports.processAudio = async (userFile, refFilePath) => {
         headers: form.getHeaders(),
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-        timeout: 60000,
+        timeout: 600000,
       }
     );
 
