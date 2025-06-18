@@ -2,6 +2,16 @@ const { StatusCodes } = require('http-status-codes');
 const uploadService = require('../services/upload-service');
 const RefAudio = require('../models/RefAudio');
 
+/**
+ * 사용자 녹음 파일을 처리하는 컨트롤러
+ * @param {Object} req - Express 요청 객체
+ * @param {Object} req.body - 요청 본문
+ * @param {number} req.body.globalOrder - 참조 오디오의 전역 순서
+ * @param {Object} req.file - 업로드된 사용자 오디오 파일
+ * @param {Object} res - Express 응답 객체
+ * @param {Function} next - 다음 미들웨어 함수
+ * @returns {Promise<void>}
+ */
 exports.postRecordFile = async (req, res, next) => {
   try {
     // 두 파일이 form-data로 왔는지 확인

@@ -3,10 +3,14 @@ const path = require('path');
 
 const storage = multer.memoryStorage();
 
+/**
+ * Multer 설정 객체
+ * 파일 업로드 제한 및 필터링을 처리
+ */
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 20 * 1024 * 1024,
+    fileSize: 20 * 1024 * 1024, // 20MB
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -29,8 +33,16 @@ const upload = multer({
   },
 });
 
+/**
+ * 단일 오디오 파일 업로드를 처리하는 미들웨어
+ * @type {import('express').RequestHandler}
+ */
 exports.uploadSingleAudio = upload.single('user_audio');
 
+/**
+ * 두 개의 오디오 파일 업로드를 처리하는 미들웨어
+ * @type {import('express').RequestHandler}
+ */
 exports.uploadTwoAudios = upload.fields([
   { name: 'user_audio', maxCount: 1 },
   { name: 'ref_audio', maxCount: 1 },
