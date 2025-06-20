@@ -1,62 +1,96 @@
 # SRT (Speech Recognition Trainer)
 
-음성 인식 학습을 위한 API 서버입니다. 사용자의 음성을 참조 오디오와 비교하여 분석 결과를 제공합니다.
+## 개요
 
-## 기술 스택
+SRT는 음성 인식 학습을 위한 API 서버입니다. 사용자의 음성을 참조 오디오와 비교하여 분석 결과를 제공하며, 교육/연습용 음성 데이터 관리와 평가 기능을 지원합니다.
 
-- Node.js
-- Express
-- MongoDB (Mongoose)
-- Multer (파일 업로드)
+---
 
-## 시작하기
+## 폴더 구조
 
-### 설치
-
-```bash
-npm install
+```
+SRT/
+├── app.js
+├── audio/
+├── config/
+│   └── database.js
+├── key/
+├── src/
+│   ├── controllers/
+│   │   ├── content-controller.js
+│   │   ├── index-controller.js
+│   │   └── upload-controller.js
+│   ├── middlewares/
+│   │   ├── error-handler.js
+│   │   └── upload-handler.js
+│   ├── models/
+│   │   ├── RefAudio.js
+│   │   └── Video.js
+│   ├── routes/
+│   │   ├── content-route.js
+│   │   ├── index-route.js
+│   │   └── upload-route.js
+│   └── services/
+│       ├── content-service.js
+│       └── upload-service.js
+├── package.json
+└── README.md
 ```
 
-### 환경 변수 설정
+---
 
-config/database.js 파일에서 MongoDB 연결 정보를 설정하세요.
+## Development Setting (기술 및 버전)
 
-### 서버 실행
+- Node.js (v18 이상 권장)
+- Express ^5.1.0
+- MongoDB (Mongoose ^8.14.1)
+- Babel (ES6+ 지원)
+- 기타: dotenv, cors, helmet, morgan 등
 
-```bash
-npm start
-```
+---
 
-## API 문서
+## Libraries & Tools
 
-### 1. 콘텐츠 관리 API
+- **express**: 웹 서버 및 라우팅
+- **mongoose**: MongoDB ODM
+- **multer**: 파일 업로드 처리
+- **axios**: 외부 API 통신
+- **form-data**: 멀티파트 폼 데이터 생성
+- **nodemon**: 개발용 자동 재시작
+- **jest**: 테스트 프레임워크
+- **eslint/prettier**: 코드 스타일 및 린팅
+- **helmet/cors/morgan**: 보안 및 로깅
 
-#### 콘텐츠 조회
+---
 
-- **GET** `/content/:contentId`
-- **설명**: 특정 ID의 비디오 콘텐츠 정보를 조회합니다.
-- **URL 파라미터**:
-  - `contentId`: 콘텐츠의 globalOrder
-- **응답**:
-  ```json
-  {
-    "success": true,
-    "message": "Content Resource Retrieved Successfully",
-    "resource": {
-      "globalOrder": 1,
-      "videoId": "video123",
-      "startTime": 0,
-      "endTime": 10,
-      "script": "스크립트 내용"
-    }
-  }
-  ```
+## 세부 내용
 
-#### 비디오 콘텐츠 생성
+### 데이터 모델
 
-- **POST** `/content`
-- **설명**: 새로운 비디오 콘텐츠 정보를 생성합니다.
-- **요청 본문**:
+#### Video
+
+- `globalOrder`: 고유 순서 (Number, unique)
+- `videoId`: 비디오 식별자 (String)
+- `startTime`, `endTime`: 구간 정보 (Number, 초 단위)
+- `script`: 스크립트(자막) (String)
+- `createdAt`, `updatedAt`: 생성/수정 시각
+
+#### RefAudio
+
+- `globalOrder`: 참조 오디오 순서 (Number)
+- `audio_path`: 오디오 파일 경로 (String)
+- `createdAt`, `updatedAt`: 생성/수정 시각
+
+### API 세부사항
+
+#### 1. 콘텐츠 관리
+
+- **GET** `/content/:contentId`  
+  특정 globalOrder의 비디오 정보 조회
+
+- **POST** `/content`  
+  비디오 정보 등록  
+  요청 예시:
   ```json
   {
     "videoId": "video123",
@@ -66,89 +100,49 @@ npm start
     "globalOrder": 1
   }
   ```
-- **응답**:
+
+#### 2. 파일 업로드 및 분석
+
+- **POST** `/upload`  
+  사용자 음성 파일 업로드 및 참조 오디오와 비교 분석
+  - Content-Type: `multipart/form-data`
+  - 파라미터:
+    - `user_audio`: 사용자 음성 파일 (WAV, MP3, MPEG)
+    - `globalOrder`: 참조 오디오 순서
+  - 제한: 최대 20MB
+
+#### 3. 에러 처리
+
+- 모든 API는 아래와 같은 형식으로 에러 반환:
   ```json
   {
-    "message": "비디오 저장 성공",
-    "data": {
-      "videoId": "video123",
-      "startTime": 0,
-      "endTime": 10,
-      "script": "스크립트 내용",
-      "globalOrder": 1
-    }
+    "success": false,
+    "message": "에러 메시지"
   }
   ```
+- 주요 에러 코드: 400, 404, 409, 500
 
-### 2. 파일 업로드 API
+---
 
-#### 음성 파일 업로드 및 분석
+## 사용방법
 
-- **POST** `/upload`
-- **설명**: 사용자의 음성 파일을 업로드하고 참조 오디오와 비교 분석합니다.
-- **Content-Type**: `multipart/form-data`
-- **요청 파라미터**:
-  - `user_audio`: 사용자 음성 파일 (WAV, MP3)
-  - `globalOrder`: 참조 오디오의 순서 번호
-- **제한사항**:
-  - 최대 파일 크기: 20MB
-  - 지원 형식: WAV, MP3, MPEG
-- **응답**:
-  ```json
-  {
-    "success": true,
-    "message": "Post file success",
-    "data": {
-      "분석_결과": "데이터"
-    }
-  }
-  ```
+### 1. 설치 및 실행
 
-## 에러 처리
-
-모든 API는 다음과 같은 형식으로 에러를 반환합니다:
-
-```json
-{
-  "success": false,
-  "message": "에러 메시지"
-}
+```bash
+npm install
+npm start
 ```
 
-주요 에러 코드:
+### 2. 환경 변수
 
-- 400: 잘못된 요청 (필수 필드 누락 등)
-- 404: 리소스를 찾을 수 없음
-- 409: 중복된 데이터 (예: globalOrder)
-- 500: 서버 내부 에러
+- `config/database.js`에서 MongoDB 연결 정보 설정
 
-## 데이터 모델
+### 3. API 테스트
 
-### Video 모델
+- Postman, curl 등으로 위 API 엔드포인트 호출
 
-```javascript
-{
-  globalOrder: Number,  // 고유한 순차적 순서
-  videoId: String,     // 비디오 식별자
-  startTime: Number,   // 시작 시간(초)
-  endTime: Number,     // 종료 시간(초)
-  script: String,      // 스크립트 내용
-  createdAt: Date,     // 생성 시간
-  updatedAt: Date      // 수정 시간
-}
-```
-
-### RefAudio 모델
-
-```javascript
-{
-  globalOrder: Number,  // 참조 오디오의 순서
-  audio_path: String,  // 오디오 파일 경로
-  createdAt: Date,     // 생성 시간
-  updatedAt: Date      // 수정 시간
-}
-```
+---
 
 ## 라이선스
 
-이 프로젝트는 MIT 라이선스를 따릅니다.
+MIT License
